@@ -1,27 +1,18 @@
-# Script for BlastAlert
-# requires .my.cnf / blastalert DB / blastresult Table
-
-# blast against SwissProt
-echo "Started blasting ..."
-/home/awkologist/BioLinux/ncbi-blast-2.5.0+/bin/blastp -db swissprot -remote -query /home/awkologist/BioLinux/hydrogenases.fasta -out h2asevsswissprot.tab -outfmt '6 qseqid sgi length nident positive evalue stitle'
-
-# print size of h2asevsswissprot.tab
+# requires: hydrogenases.fasta; .my.cnf; table blastresult
+# Blast gegen SwissProt
+echo "Starte BLAST ..."
+/home/awkologist/BioLinux/ncbi-blast-2.5.0+/bin/blastp -db swissprot -remote -query /home/awkologist/BioLinux/hydrogenases.fasta -out h2ase-vs-swissprot.tab -outfmt '6 qseqid sgi length nident positive evalue stitle'
+# Print date
 date >> blastalert.txt
-echo -n "Lines of BLAST Result: " | tee -a blastalert.txt
-wc -l h2asevsswissprot.tab | tee -a blastalert.txt
-
-
-# check for hits already in blastresult table
-# print new hits on screen and into blastalert.txt file
-# cp new hits to tmp file
-echo "Started processing ..."
+# Zähle Treffer
+echo -n "Treffer bei BLAST:" | tee -a blastalert.txt
+wc -l h2ase-vs-swissprot.tab | tee -a blastalert.txt
+# Check if IDs in MySQL DB
+echo "Starte Analyse ..."
 touch tmp
-awk -F"\t" 'BEGIN{cmd="mysql -u awkologist -pawkology blastalert -e \"select sgi from blastresult\""; while(cmd | getline > 0){ids[$0]++}}{if(ids[$2]==0){print "New hit "$2, $7; print $0 > "tmp"}}' h2asevsswissprot.tab | tee -a blastalert.txt
-
-# load new hits into DB
-echo "Started uploading to MySQL..."
-mysql -u awkologist -pawkology blastalert -e 'LOAD DATA LOCAL INFILE "tmp" INTO TABLE blastresult'
-echo "---------------------------------------------------------------------" >> blastalert.txt
-
-# remove tmp
+awk -F"\t" 'BEGIN{c=0;cmd="mysql -u awkologist -pawkology blastalert -e \"select * from blastresult;\""; while(cmd | getline > 0){id[$2]++}}{if(id[$2]==0){c++;print $2" ist neu: "$7; print $0 > "tmp"}}END{print c" neue Sequenzen"}' h2ase-vs-swissprot.tab | tee -a blastalert.txt
+echo "----------------------------" >> blastalert.txt
+# Write new hits into MySQL
+echo "Lade Daten ..."
+mysql -u awkologist -pawkology blastalert -e "load data local infile 'tmp' into table blastresult;"
 rm tmp
