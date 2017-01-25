@@ -1,10 +1,12 @@
 touch blastalert-www.txt
 chmod 777 blastalert-www.txt
 
-Files linked with ln -s foo
+Symbolic links with "ln -s foo" have to be created for:
 
 index.html in /var/www/html/index.html owned by root (rw-r--r--)
 
 script.sh in /usr/lib/cgi-bin/ owned by awkologist (rwxr-xr-x)
 
 show.sh in /usr/lib/cgi-bin/ owned by awkologist (rwxr-xr-x)
+
+The original files are in /home/USERNAME/BioLinux/
