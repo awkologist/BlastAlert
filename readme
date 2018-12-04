@@ -1,3 +1,5 @@
+SQL-code for the blast table
+
 touch blastalert-www.txt
 chmod 777 blastalert-www.txt
 
